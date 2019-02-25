@@ -17,8 +17,6 @@
 #include "mbed.h"
 #include "ble/BLE.h"
 #include "LEDService.h"
-#include "ADCService.h"
-#include "TempService.h"
 #include "AccService.h"
 #include "MagService.h"
 
@@ -31,17 +29,20 @@
 DigitalOut col1(P0_4, 0);
 DigitalOut alivenessLED(P0_13, 0);
 DigitalOut actuatedLED(P0_14, 0);
-AnalogIn ADC(P0_3);
-uint16_t ADCResult=0;
-const static char     DEVICE_NAME[] = "Maks";
-//add new service here  TempService::TEMP_SERVICE_UUID
-static const uint16_t uuid16_list[] = {LEDService::LED_SERVICE_UUID,ADCService::ADC_SERVICE_UUID,TempService::TEMP_SERVICE_UUID};
+
+const static char     DEVICE_NAME[] = "BBCAccel";
+static const uint16_t uuid16_list[] = {LEDService::LED_SERVICE_UUID,ACCELService::ACCEL_SERVICE_UUID};
 
 LEDService *ledServicePtr;
-ADCService *ADCServicePtr;
-TempService *TempServicePtr; // new pointer for new service later used to create new obj
+ACCELService *AccelServicePtr;
 Ticker ticker;
 
+
+// Accelerometer : MMA8653FC.  I2C address
+I2C i2c(P0_30, P0_0); // SDA is on P0_30, SCL is on P0_0
+const int MMA8653_ADDRESS = (0x1d<<1); 
+const int MMA8653_ID = 0x5a;
+void updateAccelerations(void); 
 void disconnectionCallback(const Gap::DisconnectionCallbackParams_t *params)
 {
     BLE::Instance().gap().startAdvertising();
@@ -50,6 +51,7 @@ void disconnectionCallback(const Gap::DisconnectionCallbackParams_t *params)
 void periodicCallback(void)
 {
     alivenessLED = !alivenessLED; /* Do blinky on LED1 to indicate system aliveness. */
+    updateAccelerations();
 }
 
 /**
@@ -64,11 +66,7 @@ void onDataWrittenCallback(const GattWriteCallbackParams *params) {
     }
 }
 
-//if someone reads anything from  device this func is called 
-
 void onDataReadCallback(const GattReadCallbackParams *params) {
-   
-    ADCResult=ADC.read_u16();
    
 }
 /**
@@ -104,9 +102,7 @@ void bleInitComplete(BLE::InitializationCompleteCallbackContext *params)
 
     bool initialValueForLEDCharacteristic = false;
     ledServicePtr = new LEDService(ble, initialValueForLEDCharacteristic);
-    ADCServicePtr = new ADCService(ble,ADCResult);
-    //ptr creating a new TempService obj
-    TempServicePtr = new TempService(ble); // creating obj of new service and passing ble 
+    AccelServicePtr = new ACCELService(ble,0);
     /* setup advertising */
     ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::BREDR_NOT_SUPPORTED | GapAdvertisingData::LE_GENERAL_DISCOVERABLE);
     ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LIST_16BIT_SERVICE_IDS, (uint8_t *)uuid16_list, sizeof(uuid16_list));
@@ -115,21 +111,42 @@ void bleInitComplete(BLE::InitializationCompleteCallbackContext *params)
     ble.gap().setAdvertisingInterval(1000); /* 1000ms. */
     ble.gap().startAdvertising();
 }
-int Tempv = 0;
-
-#define TEMP_BASE 0x4000C000
-#define TEMP_START (*(volatile uint32_t *)(TEMP_BASE + 0))
-#define TEMP_STOP (*(volatile uint32_t *)(TEMP_BASE + 4))
-#define TEMP_DATARDY (*(volatile uint32_t *)(TEMP_BASE + 0x100))
-#define TEMP_READING (*(volatile uint32_t *)(TEMP_BASE + 0x508))
-int readTemperature()
+void updateAccelerations()
 {
-    TEMP_START = 1; // enable the temperature sensor
-    while (TEMP_DATARDY == 0);
-    return TEMP_READING/4;
+    char Data[8]; // Declare a buffer for data transfer    
+    int Status;
+        int16_t X;
+        Data[0]=0x01; // Register number 1 has the X data (2 bytes)
+        Status = i2c.write(MMA8653_ADDRESS,Data,1,true);  // Write register number
+        Status = i2c.read(MMA8653_ADDRESS,Data,2); // Read register contents
+        X = Data[0];
+        X = (X << 8) + Data[1];
+        X = X >> 6; // only 10 bits of data are available
+        
+        int16_t Y;
+        Data[0]=0x03; // Register number 3 has the Y data (2 bytes)
+        Status = i2c.write(MMA8653_ADDRESS,Data,1,true);  // Write register number
+        Status = i2c.read(MMA8653_ADDRESS,Data,2); // Read register contents
+        Y = Data[0];
+        Y = (Y << 8) + Data[1];
+        Y = Y >> 6; // only 10 bits of data are available        
+        
+        int16_t Z;
+        Data[0]=0x05; // Register number 1 has the Z data (2 bytes)
+        Status = i2c.write(MMA8653_ADDRESS,Data,1,true);  // Write register number
+        Status = i2c.read(MMA8653_ADDRESS,Data,2); // Read register contents
+        Z = Data[0];
+        Z = (Z << 8) + Data[1];
+        Z = Z >> 6; // only 10 bits of data are available
+        
+        AccelServicePtr->updateAccelX(X);
+        AccelServicePtr->updateAccelY(Y);
+        AccelServicePtr->updateAccelZ(Z);
 }
 int main(void)
-{
+{    
+    char Data[8]; // Declare a buffer for data transfer    
+    int Status;
     ticker.attach(periodicCallback, 1); /* Blink LED every second */
 
     BLE &ble = BLE::Instance();
@@ -139,11 +156,13 @@ int main(void)
      * BLE object is used in the main loop below. */
     while (ble.hasInitialized()  == false) { /* spin loop */ }
 
-    while (true) {
+   // Wake the accelerometer from sleep mode by writing 1 to register number 0x2a    
+    Data[0]=0x2a; 
+    Data[1]=1;
+    Status = i2c.write(MMA8653_ADDRESS,Data,2);  // Write data to register    
+    
+    while (true) {        
         ble.waitForEvent();
-        ADCResult=ADC.read_u16();
-        ADCServicePtr->updateADCValue(ADCResult);
-        TempServicePtr->updateValue(readTemperature());
-        
+       
     }
 }
