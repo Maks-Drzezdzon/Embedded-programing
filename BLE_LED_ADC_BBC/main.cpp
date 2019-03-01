@@ -18,7 +18,7 @@
 #include "ble/BLE.h"
 #include "LEDService.h"
 #include "AccService.h"
-#include "MagService.h"
+#include "TempService.h"
 
 /* 
  * All the LEDs on the micro:bit are part of the LED Matrix,
@@ -30,11 +30,12 @@ DigitalOut col1(P0_4, 0);
 DigitalOut alivenessLED(P0_13, 0);
 DigitalOut actuatedLED(P0_14, 0);
 
-const static char     DEVICE_NAME[] = "BBCAccel";
-static const uint16_t uuid16_list[] = {LEDService::LED_SERVICE_UUID,ACCELService::ACCEL_SERVICE_UUID};
+const static char     DEVICE_NAME[] = "maks";
+static const uint16_t uuid16_list[] = {LEDService::LED_SERVICE_UUID,ACCELService::ACCEL_SERVICE_UUID,TempService::TEMP_SERVICE_UUID};
 
 LEDService *ledServicePtr;
 ACCELService *AccelServicePtr;
+TempService *TempServicePtr; // new pointer for new service later used to create new obj
 Ticker ticker;
 
 
@@ -103,6 +104,7 @@ void bleInitComplete(BLE::InitializationCompleteCallbackContext *params)
     bool initialValueForLEDCharacteristic = false;
     ledServicePtr = new LEDService(ble, initialValueForLEDCharacteristic);
     AccelServicePtr = new ACCELService(ble,0);
+    TempServicePtr = new TempService(ble); // creating obj of new service and passing ble 
     /* setup advertising */
     ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::BREDR_NOT_SUPPORTED | GapAdvertisingData::LE_GENERAL_DISCOVERABLE);
     ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LIST_16BIT_SERVICE_IDS, (uint8_t *)uuid16_list, sizeof(uuid16_list));
@@ -143,6 +145,21 @@ void updateAccelerations()
         AccelServicePtr->updateAccelY(Y);
         AccelServicePtr->updateAccelZ(Z);
 }
+
+int Tempv = 0;
+
+#define TEMP_BASE 0x4000C000
+#define TEMP_START (*(volatile uint32_t *)(TEMP_BASE + 0))
+#define TEMP_STOP (*(volatile uint32_t *)(TEMP_BASE + 4))
+#define TEMP_DATARDY (*(volatile uint32_t *)(TEMP_BASE + 0x100))
+#define TEMP_READING (*(volatile uint32_t *)(TEMP_BASE + 0x508))
+int readTemperature()
+{
+    TEMP_START = 1; // enable the temperature sensor
+    while (TEMP_DATARDY == 0);
+    return TEMP_READING/4;
+}
+
 int main(void)
 {    
     char Data[8]; // Declare a buffer for data transfer    
@@ -163,6 +180,7 @@ int main(void)
     
     while (true) {        
         ble.waitForEvent();
+        TempServicePtr->updateValue(readTemperature());
        
     }
 }
