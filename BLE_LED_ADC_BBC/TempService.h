@@ -19,8 +19,8 @@
 
 class TempService {
 public:                     //this is being added as the ID of the service
-    const static uint16_t TEMP_SERVICE_UUID              = 0xA001;// new values
-    const static uint16_t TEMP_VALUE_CHARACTERISTIC_UUID = 0xA007;//new values
+    const static uint16_t TEMP_SERVICE_UUID              = 0xA014;// new values
+    const static uint16_t TEMP_VALUE_CHARACTERISTIC_UUID = 0xA015;//new values
 
     TempService(BLEDevice &_ble) :
         ble(_ble), Temperature(TEMP_VALUE_CHARACTERISTIC_UUID, 0)

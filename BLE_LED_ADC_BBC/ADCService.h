@@ -4,8 +4,8 @@
 
 class ADCService {
 public:
-    const static uint16_t ADC_SERVICE_UUID              = 0xA002;
-    const static uint16_t ADC_VALUE_CHARACTERISTIC_UUID = 0xA003;
+    const static uint16_t ADC_SERVICE_UUID              = 0xA004;
+    const static uint16_t ADC_VALUE_CHARACTERISTIC_UUID = 0xA005;
 
     ADCService(BLEDevice &_ble, uint16_t initialValueForADCCharacteristic) :
         ble(_ble), ADCValue(ADC_VALUE_CHARACTERISTIC_UUID, &initialValueForADCCharacteristic)

@@ -19,14 +19,19 @@
 
 class ACCELService {
 public:
-    const static uint16_t ACCEL_SERVICE_UUID = 0xA012;
-    const static uint16_t ACCEL_X_CHARACTERISTIC_UUID = 0xA013;
-    const static uint16_t ACCEL_Y_CHARACTERISTIC_UUID = 0xA014;
-    const static uint16_t ACCEL_Z_CHARACTERISTIC_UUID = 0xA015;
+    const static uint16_t ACCEL_SERVICE_UUID = 0xA006;
+    const static uint16_t ACCEL_X_CHARACTERISTIC_UUID = 0xA007;
+    const static uint16_t ACCEL_Y_CHARACTERISTIC_UUID = 0xA008;
+    const static uint16_t ACCEL_Z_CHARACTERISTIC_UUID = 0xA009;
 
     ACCELService(BLEDevice &_ble, int16_t initialValueForACCELCharacteristic) :
-        ble(_ble), AccelX(ACCEL_X_CHARACTERISTIC_UUID, &initialValueForACCELCharacteristic),AccelY(ACCEL_Y_CHARACTERISTIC_UUID, &initialValueForACCELCharacteristic),AccelZ(ACCEL_Z_CHARACTERISTIC_UUID, &initialValueForACCELCharacteristic)
-    {
+        ble(_ble)
+        ,AccelX(ACCEL_X_CHARACTERISTIC_UUID, &initialValueForACCELCharacteristic)
+        ,AccelY(ACCEL_Y_CHARACTERISTIC_UUID, &initialValueForACCELCharacteristic)
+        ,AccelZ(ACCEL_Z_CHARACTERISTIC_UUID, &initialValueForACCELCharacteristic)
+    {   
+        //uses the GattCharacteristic function from GattCharacteristic class
+        //creates an array and stores  
         GattCharacteristic *charTable[] = {&AccelX,&AccelY,&AccelZ};
         GattService         AccelService(ACCEL_SERVICE_UUID, charTable, sizeof(charTable) / sizeof(GattCharacteristic *));
         ble.addService(AccelService);
@@ -41,6 +46,8 @@ public:
     void updateAccelY(uint16_t newValue) {
         ble.gattServer().write(AccelY.getValueHandle(), (uint8_t *)&newValue, sizeof(uint16_t));
     }
+    //stores variable of type uint16_t in newValue 
+    //this variable only exists in this function thats why it can be repeated in the other 3
     void updateAccelZ(uint16_t newValue) {
         ble.gattServer().write(AccelZ.getValueHandle(), (uint8_t *)&newValue, sizeof(uint16_t));
     }
