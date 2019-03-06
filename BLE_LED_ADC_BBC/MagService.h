@@ -1,24 +1,10 @@
-/* mbed Microcontroller Library
- * Copyright (c) 2006-2013 ARM Limited
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 #ifndef __BLE_MAG_SERVICE_H__
 #define __BLE_MAG_SERVICE_H__
 
 class MagService {
 public:
+    //this is being added as the ID of the service
+    //declaring register addresses
     const static uint16_t MAG_SERVICE_UUID = 0xA010;
     const static uint16_t MAG_X_CHARACTERISTIC_UUID = 0xA011;
     const static uint16_t MAG_Y_CHARACTERISTIC_UUID = 0xA012;
@@ -46,7 +32,12 @@ public:
     }
 
 private:
+    //defines the BLEDvice as &ble
     BLEDevice &ble;
+    //defines the characteristics of each variable for the Service
+    //characteristic is  the name give to grouped pieces of user data
+    //these are further orgonised by a hierarchy of sections refered to as services
+    //this allows for data to be sent and read 
     ReadOnlyGattCharacteristic<int16_t>  MagX;
     ReadOnlyGattCharacteristic<int16_t>  MagY;
     ReadOnlyGattCharacteristic<int16_t>  MagZ;

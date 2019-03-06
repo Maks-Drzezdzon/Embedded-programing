@@ -19,6 +19,8 @@
 
 class BtnService {
 public:
+     //this is being added as the ID of the service
+    //declaring register addresses
     const static uint16_t BTN_SERVICE_UUID              = 0xA002;
     const static uint16_t BTN_STATE_CHARACTERISTIC_UUID = 0xA003;
 
@@ -38,7 +40,12 @@ public:
     }
 
 private:
+    //defines the BLEDvice as &ble
     BLEDevice                              &ble;
+    //defines the characteristics of each variable for the Service
+    //characteristic is  the name give to grouped pieces of user data
+    //these are further orgonised by a hierarchy of sections refered to as services 
+    //this allows for data to be sent and read
     ReadWriteGattCharacteristic<uint16_t>  btnState;
 };
 

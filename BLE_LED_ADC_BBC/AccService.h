@@ -1,24 +1,11 @@
-/* mbed Microcontroller Library
- * Copyright (c) 2006-2013 ARM Limited
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 #ifndef __BLE_ACCEL_SERVICE_H__
 #define __BLE_ACCEL_SERVICE_H__
 
 class ACCELService {
 public:
+     //this is being added as the ID of the service
+    //declaring register addresses
+    //UUIDs are 16byte numbers and must be globally unique
     const static uint16_t ACCEL_SERVICE_UUID = 0xA006;
     const static uint16_t ACCEL_X_CHARACTERISTIC_UUID = 0xA007;
     const static uint16_t ACCEL_Y_CHARACTERISTIC_UUID = 0xA008;
@@ -26,24 +13,44 @@ public:
 
     ACCELService(BLEDevice &_ble, int16_t initialValueForACCELCharacteristic) :
         ble(_ble)
+        //creates a ref for each axis
+        //binds UUID with each characteristic defined  at the bottom of the service
+        //by passing the values to each ref variable
         ,AccelX(ACCEL_X_CHARACTERISTIC_UUID, &initialValueForACCELCharacteristic)
         ,AccelY(ACCEL_Y_CHARACTERISTIC_UUID, &initialValueForACCELCharacteristic)
         ,AccelZ(ACCEL_Z_CHARACTERISTIC_UUID, &initialValueForACCELCharacteristic)
     {   
         //uses the GattCharacteristic function from GattCharacteristic class
-        //creates an array and stores  
+        //creates an array and stores sensor values
         GattCharacteristic *charTable[] = {&AccelX,&AccelY,&AccelZ};
+        //a gatt service defines the way that two ble devices transfer data 
+        //using services and characteristics
+        
+        //this takes the service UUID and values from the table array 
+        //sizeof is an operator in c that is used with when dealing with int floa or char data types
+        //it is used to return the amount of memory allocated to that data type
         GattService         AccelService(ACCEL_SERVICE_UUID, charTable, sizeof(charTable) / sizeof(GattCharacteristic *));
+        
+        //creates ble service and passes AccelService with its data
         ble.addService(AccelService);
     }
-
+    
+    //attributes are the smallest data entities defined by gatt
+    //handle is used to handle attributes on a gatt server
     GattAttribute::Handle_t getValueHandle() const {
+        //returns data stored in AccelX
         return AccelX.getValueHandle();
     }
+    
     void updateAccelX(uint16_t newValue) {
+        //writes data passed through the newValue variable
+        //uses the gattserver accessor to write the data over ble
         ble.gattServer().write(AccelX.getValueHandle(), (uint8_t *)&newValue, sizeof(uint16_t));
     }
+    
     void updateAccelY(uint16_t newValue) {
+        //writes data passed through the newValue variable
+        //uses the gattserver accessor to write the data over ble
         ble.gattServer().write(AccelY.getValueHandle(), (uint8_t *)&newValue, sizeof(uint16_t));
     }
     //stores variable of type uint16_t in newValue 
@@ -53,7 +60,12 @@ public:
     }
 
 private:
+    //defines the BLEDvice as &ble
     BLEDevice &ble;
+    //defines the characteristics of each accel axis for the ACCELService
+    //characteristic is  the name give to grouped pieces of user data
+    //these are further orgonised by a hierarchy of sections refered to as services 
+    //this allows for data to only be read
     ReadOnlyGattCharacteristic<int16_t>  AccelX;
     ReadOnlyGattCharacteristic<int16_t>  AccelY;
     ReadOnlyGattCharacteristic<int16_t>  AccelZ;
