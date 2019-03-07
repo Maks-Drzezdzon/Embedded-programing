@@ -11,17 +11,33 @@ public:
     const static uint16_t MAG_Z_CHARACTERISTIC_UUID = 0xA013;
 
     MagService(BLEDevice &_ble, int16_t initialValueForMAGCharacteristic) :
-        ble(_ble), MagX(MAG_X_CHARACTERISTIC_UUID, &initialValueForMAGCharacteristic),MagY(MAG_Y_CHARACTERISTIC_UUID, &initialValueForMAGCharacteristic),MagZ(MAG_Z_CHARACTERISTIC_UUID, &initialValueForMAGCharacteristic)
+    //constructor for service
+        ble(_ble), 
+        MagX(MAG_X_CHARACTERISTIC_UUID, &initialValueForMAGCharacteristic),
+        MagY(MAG_Y_CHARACTERISTIC_UUID, &initialValueForMAGCharacteristic),
+        MagZ(MAG_Z_CHARACTERISTIC_UUID, &initialValueForMAGCharacteristic)
+        //creates a ref for each axis
+        //binds UUID with each characteristic defined  at the bottom of the service
+        //by passing the values to each ref variable
     {
         GattCharacteristic *charTable[] = {&MagX,&MagY,&MagZ};
+        
         GattService         MagService(MAG_SERVICE_UUID, charTable, sizeof(charTable) / sizeof(GattCharacteristic *));
         ble.addService(MagService);
     }
-
+    
+    //attributes are the smallest data entities defined by gatt
+    //handle is used to handle attributes on a gatt server
     GattAttribute::Handle_t getValueHandle() const {
+         //returns data stored in MagX
         return MagX.getValueHandle();
     }
+    
+    
     void updateMagX(uint16_t newValue) {
+        //writes data passed through the newValue variable
+        //uses the gattserver accessor to write the data over ble
+        //this is repeated for each axis
         ble.gattServer().write(MagX.getValueHandle(), (uint8_t *)&newValue, sizeof(uint16_t));
     }
     void updateMagY(uint16_t newValue) {

@@ -1,5 +1,6 @@
 #ifndef __BLE_ACCEL_SERVICE_H__
 #define __BLE_ACCEL_SERVICE_H__
+//defines name for service
 
 class ACCELService {
 public:
@@ -10,7 +11,7 @@ public:
     const static uint16_t ACCEL_X_CHARACTERISTIC_UUID = 0xA007;
     const static uint16_t ACCEL_Y_CHARACTERISTIC_UUID = 0xA008;
     const static uint16_t ACCEL_Z_CHARACTERISTIC_UUID = 0xA009;
-
+    //constructor for service
     ACCELService(BLEDevice &_ble, int16_t initialValueForACCELCharacteristic) :
         ble(_ble)
         //creates a ref for each axis

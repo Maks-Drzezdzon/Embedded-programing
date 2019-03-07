@@ -10,9 +10,10 @@ public:
     const static uint16_t LED_STATE_CHARACTERISTIC_UUID = 0xA001;
 
     LEDService(BLEDevice &_ble, bool initialValueForLEDCharacteristic) :
-         //creates a ref for each axis
+         
         //binds UUID with each characteristic defined  at the bottom of the service
         //by passing the values to each ref variable
+        //constructor for service
         ble(_ble), ledState(LED_STATE_CHARACTERISTIC_UUID, &initialValueForLEDCharacteristic)
     {   
         //uses the GattCharacteristic function from GattCharacteristic class
@@ -25,13 +26,13 @@ public:
         //sizeof is an operator in c that is used with when dealing with int floa or char data types
         //it is used to return the amount of memory allocated to that data type
         GattService         ledService(LED_SERVICE_UUID, charTable, sizeof(charTable) / sizeof(GattCharacteristic *));
-        //creates ble service and passes AccelService with its data
+        //creates ble service and passes ledService with its data
         ble.addService(ledService);
     }
     //attributes are the smallest data entities defined by gatt
     //handle is used to handle attributes on a gatt server
     GattAttribute::Handle_t getValueHandle() const {
-        //returns data stored in ADCValue
+        //returns data stored in ledState
         return ledState.getValueHandle();
     }
 

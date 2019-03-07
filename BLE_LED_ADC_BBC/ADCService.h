@@ -1,5 +1,6 @@
 #ifndef __BLE_ADC_SERVICE_H__
 #define __BLE_ADC_SERVICE_H__
+//defines name for service
 
 class ADCService {
 public:
@@ -10,7 +11,7 @@ public:
     const static uint16_t ADC_VALUE_CHARACTERISTIC_UUID = 0xA005;
     
     ADCService(BLEDevice &_ble, uint16_t initialValueForADCCharacteristic) :
-        //creates a ref for each axis
+        //constructor for service
         //binds UUID with each characteristic defined  at the bottom of the service
         //by passing the values to each ref variable
         ble(_ble), ADCValue(ADC_VALUE_CHARACTERISTIC_UUID, &initialValueForADCCharacteristic)
@@ -25,7 +26,7 @@ public:
         //sizeof is an operator in c that is used with when dealing with int floa or char data types
         //it is used to return the amount of memory allocated to that data type
         GattService         ADCService(ADC_SERVICE_UUID, charTable, sizeof(charTable) / sizeof(GattCharacteristic *));
-        //creates ble service and passes AccelService with its data
+        //creates ble service and passes ADCService with its data
         ble.addService(ADCService);
     }
     

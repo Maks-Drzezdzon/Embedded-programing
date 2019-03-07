@@ -1,21 +1,6 @@
-/* mbed Microcontroller Library
- * Copyright (c) 2006-2013 ARM Limited
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 #ifndef __BLE_TEMP_SERVICE_H__
 #define __BLE_TEMP_SERVICE_H__
+//defines name for service
 
 class TempService {
 public:   
@@ -26,10 +11,11 @@ public:
     const static uint16_t TEMP_VALUE_CHARACTERISTIC_UUID = 0xA015;//new values
 
     TempService(BLEDevice &_ble) :
-        //creates a ref for each axis
+       
         //binds UUID with each characteristic defined  at the bottom of the service
         //by passing the values to each ref variable
         //the initial value for temp is set to 0
+        //constructor for service
         ble(_ble), Temperature(TEMP_VALUE_CHARACTERISTIC_UUID, 0)
     {   
         //uses the GattCharacteristic function from GattCharacteristic class
@@ -42,14 +28,14 @@ public:
         //sizeof is an operator in c that is used with when dealing with int floa or char data types
         //it is used to return the amount of memory allocated to that data type
         GattService         TempService(TEMP_SERVICE_UUID, charTable, sizeof(charTable) / sizeof(GattCharacteristic *));
-        //creates ble service and passes AccelService with its data
+        //creates ble service and passes TempService with its data
         ble.addService(TempService);
     }
     
     //attributes are the smallest data entities defined by gatt
     //handle is used to handle attributes on a gatt server
     GattAttribute::Handle_t getValueHandle() const {
-        //returns data stored in ADCValue
+        //returns data stored in Temperature
         return Temperature.getValueHandle();
     }
     void updateValue(uint16_t newValue) {
