@@ -162,15 +162,20 @@ void updateAccelerations()
         Status = i2c.write(MMA8653_ADDRESS,Data,1,true);  // Write register number
         Status = i2c.read(MMA8653_ADDRESS,Data,2); // Read register contents
         Y = Data[0];
+        //shift 8 bits to the left 
         Y = (Y << 8) + Data[1];
+        //shifting 6 bits to the right
         Y = Y >> 6; // only 10 bits of data are available        
         
         int16_t Z;
         Data[0]=0x05; // Register number 5 has the Z data (2 bytes)
+        //l2c is used for peripheral lcs to processors and microcontrollers in short-distance  such as ble
         Status = i2c.write(MMA8653_ADDRESS,Data,1,true);  // Write register number
         Status = i2c.read(MMA8653_ADDRESS,Data,2); // Read register contents
         Z = Data[0];
+        //shift 8 bits to the left 
         Z = (Z << 8) + Data[1];
+        //shifting 6 bits to the right
         Z = Z >> 6; // only 10 bits of data are available
         
         //calls pointer to update values for each 
@@ -192,6 +197,7 @@ void updateMagnetometer()
     Status = i2c.write(MAG3110_ADDRESS,Data,1,true);  // Write register number
     Status = i2c.read(MAG3110_ADDRESS,Data,2); // Read register contents
     XMSB = Data[0];
+    //shift 8 bits to the left 
     XMSB = (XMSB << 8) + Data[1];
     
     Data[0]=0x02; // Register number 2 has the X data (2 bytes)
@@ -199,7 +205,7 @@ void updateMagnetometer()
     Status = i2c.read(MAG3110_ADDRESS,Data,2); // Read register contents
     XLSB = Data[0];
     
-    X = XMSB + XLSB; //both of these registers contain data for the axis
+    X = XMSB*XLSB; //both of these registers contain data for the axis
     //X = X >> 6; // only 10 bits of data are available       
     
     int16_t YMSB, YLSB, Y;
@@ -207,6 +213,7 @@ void updateMagnetometer()
     Status = i2c.write(MAG3110_ADDRESS,Data,1,true);  // Write register number
     Status = i2c.read(MAG3110_ADDRESS,Data,2); // Read register contents
     YMSB = Data[0];
+    //shift 8 bits to the left 
     YMSB = (YMSB << 8) + Data[1];
     
     Data[0]=0x04; // Register number 4 has the Y data (2 bytes)
@@ -214,21 +221,23 @@ void updateMagnetometer()
     Status = i2c.read(MAG3110_ADDRESS,Data,2); // Read register contents
     YLSB = Data[0];
     
-    Y = YMSB + YLSB; //both of these registers contain data for the axis          
+    Y = YMSB*YLSB; //both of these registers contain data for the axis          
     
     int16_t ZMSB, ZLSB, Z;
     Data[0]=0x05; // Register number 5 has the Z data (2 bytes)
     Status = i2c.write(MAG3110_ADDRESS,Data,1,true);  // Write register number
     Status = i2c.read(MAG3110_ADDRESS,Data,2); // Read register contents
     ZMSB = Data[0];
+    //shift 8 bits to the left 
     ZMSB = (ZMSB << 8) + Data[1];
     
     Data[0]=0x06; // Register number 6 has the Z data (2 bytes)
     Status = i2c.write(MAG3110_ADDRESS,Data,1,true);  // Write register number
     Status = i2c.read(MAG3110_ADDRESS,Data,2); // Read register contents
     ZLSB = Data[0];
-
-    Z = ZMSB + ZLSB; //both of these registers contain data for the axis     
+    
+    //you need to factor in the sensitivity of the censors by multiplying out the raw data
+    Z = ZMSB*ZLSB; //both of these registers contain data for the axis     
     
     //calls pointer to update values for each 
     //axis and passes each variable x y z with its data contents 
@@ -243,7 +252,7 @@ void updateMagnetometer()
 
 
 int Tempv = 0;
-
+//defines for temp
 #define TEMP_BASE 0x4000C000
 #define TEMP_START (*(volatile uint32_t *)(TEMP_BASE + 0))
 #define TEMP_STOP (*(volatile uint32_t *)(TEMP_BASE + 4))
@@ -284,12 +293,12 @@ int main(void)
      * BLE object is used in the main loop below. */
     while (ble.hasInitialized()  == false) { /* spin loop */ }
 
-    // Wake the mag from sleep mode by writing 1 to register number 0x2a    
+    // Wake the accel from sleep mode by writing 1 to register number 0x2a    
     Data[0]=0x2a; 
     Data[1]=1;
     Status = i2c.write(MMA8653_ADDRESS,Data,2);  // Write data to register 
     
-     // Wake the mag from sleep mode by writing 1 to register number 0x2a    
+     // Wake the mag from sleep mode by writing 1 to register number 0x10    
     Data[0]=0x10; 
     Data[1]=1;
     Status = i2c.write(MAG3110_ADDRESS,Data,2);  // Write data to register   
